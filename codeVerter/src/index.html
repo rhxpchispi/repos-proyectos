@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeVerter - Programming Language Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #111827;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: #1f2937;
+            border-bottom: 1px solid #374151;
+            padding: 1rem 1.5rem;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .header .subtitle {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        .main {
+            padding: 1.5rem;
+        }
+        
+        .container {
+            max-width: 112rem;
+            margin: 0 auto;
+        }
+        
+        .language-selection {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .dropdown {
+            position: relative;
+            min-width: 200px;
+        }
+        
+        .dropdown-button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #e5e7eb;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-button:hover {
+            background-color: #4b5563;
+        }
+        
+        .arrow {
+            transform: rotate(0deg);
+            transition: transform 0.2s;
+        }
+        
+        .arrow.open {
+            transform: rotate(180deg);
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 0.25rem;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            max-height: 16rem;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .dropdown-menu.open {
+            display: block;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border: 1px solid #4b5563;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            outline: none;
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+        
+        .search-input:focus {
+            border-color: #3b82f6;
+        }
+        
+        .menu-items {
+            max-height: 12rem;
+            overflow-y: auto;
+        }
+        
+        .menu-item {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            color: #e5e7eb;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .menu-item:hover {
+            background-color: #4b5563;
+        }
+        
+        .menu-item.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .arrow-icon {
+            color: #9ca3af;
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        
+        .convert-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .convert-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .convert-button:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+        
+        .convert-button:disabled {
+            background-color: #1e40af;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            background-color: #7f1d1d;
+            border: 1px solid #dc2626;
+            color: #fecaca;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .code-panels {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .code-panels {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .code-panel {
+            background-color: #1f2937;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background-color: #374151;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #4b5563;
+        }
+        
+        .panel-header h3 {
+            font-weight: 500;
+            color: #e5e7eb;
+        }
+        
+        .panel-content {
+            position: relative;
+        }
+        
+        .code-textarea {
+            width: 100%;
+            height: 24rem;
+            padding: 1rem;
+            background-color: #1f2937;
+            color: #e5e7eb;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            border: none;
+            outline: none;
+            resize: none;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(31, 41, 55, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid #4b5563;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .footer p {
+            margin-bottom: 0.25rem;
+        }
+        
+        .no-results {
+            padding: 1rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16,18 22,12 16,6"></polyline>
+                <polyline points="8,6 2,12 8,18"></polyline>
+            </svg>
+            <h1>CodeVerter</h1>
+            <span class="subtitle">Programming Language Converter</span>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="container">
+            <!-- Language Selection -->
+            <div class="language-selection">
+                <div class="dropdown" id="sourceDropdown">
+                    <button class="dropdown-button" onclick="toggleDropdown('source')">
+                        <span id="sourceLanguageText">Python</span>
+                        <svg class="arrow" id="sourceArrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6,9 12,15 18,9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="sourceMenu">
+                        <input type="text" class="search-input" placeholder="Search languages..." onkeyup="filterLanguages('source', this.value)">
+                        <div class="menu-items" id="sourceItems"></div>
+                    </div>
+                </div>
+
+                <svg class="arrow-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9,18 15,12 9,6"></polyline>
+                </svg>
+
+                <div class="dropdown" id="targetDropdown">
+                    <button class="dropdown-button" onclick="toggleDropdown('target')">
+                        <span id="targetLanguageText">JavaScript</span>
+                        <svg class="arrow" id="targetArrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6,9 12,15 18,9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="targetMenu">
+                        <input type="text" class="search-input" placeholder="Search languages..." onkeyup="filterLanguages('target', this.value)">
+                        <div class="menu-items" id="targetItems"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Convert Button -->
+            <div class="convert-section">
+                <button class="convert-button" id="convertButton" onclick="convertCode()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16,18 22,12 16,6"></polyline>
+                        <polyline points="8,6 2,12 8,18"></polyline>
+                    </svg>
+                    <span id="convertButtonText">Convert Code</span>
+                </button>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error" id="errorMessage" style="display: none;"></div>
+
+            <!-- Code Panels -->
+            <div class="code-panels">
+                <!-- Source Code Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <h3 id="sourceTitle">Source Code (Python)</h3>
+                    </div>
+                    <div class="panel-content">
+                        <textarea 
+                            id="sourceCode" 
+                            class="code-textarea" 
+                            placeholder="Enter your source code here..."
+                        ># Example Python code
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))</textarea>
+                    </div>
+                </div>
+
+                <!-- Target Code Panel -->
+                <div class="code-panel">
+                    <div class="panel-header">
+                        <h3 id="targetTitle">Converted Code (JavaScript)</h3>
+                    </div>
+                    <div class="panel-content">
+                        <textarea 
+                            id="targetCode" 
+                            class="code-textarea" 
+                            placeholder="Converted code will appear here..." 
+                            readonly
+                        ></textarea>
+                        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>CodeVerter uses Claude AI to convert code between programming languages.</p>
+                <p>Results may require manual review and adjustment.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Programming languages
+        const languages = [
+            'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'C', 'Go', 
+            'Rust', 'Swift', 'Kotlin', 'PHP', 'Ruby', 'Scala', 'R', 'MATLAB', 
+            'Perl', 'Haskell', 'Lua', 'Dart', 'Elixir', 'F#', 'Clojure', 
+            'Objective-C', 'Visual Basic'
+        ];
+
+        let currentSourceLanguage = 'Python';
+        let currentTargetLanguage = 'JavaScript';
+
+        // Initialize dropdown menus
+        function initializeDropdowns() {
+            populateDropdown('source');
+            populateDropdown('target');
+        }
+
+        function populateDropdown(type) {
+            const itemsContainer = document.getElementById(type + 'Items');
+            itemsContainer.innerHTML = '';
+            
+            languages.forEach(language => {
+                const button = document.createElement('button');
+                button.className = 'menu-item';
+                button.textContent = language;
+                button.onclick = () => selectLanguage(type, language);
+                
+                if ((type === 'source' && language === currentSourceLanguage) ||
+                    (type === 'target' && language === currentTargetLanguage)) {
+                    button.classList.add('selected');
+                }
+                
+                itemsContainer.appendChild(button);
+            });
+        }
+
+        function toggleDropdown(type) {
+            const menu = document.getElementById(type + 'Menu');
+            const arrow = document.getElementById(type + 'Arrow');
+            
+            // Close other dropdown
+            const otherType = type === 'source' ? 'target' : 'source';
+            const otherMenu = document.getElementById(otherType + 'Menu');
+            const otherArrow = document.getElementById(otherType + 'Arrow');
+            otherMenu.classList.remove('open');
+            otherArrow.classList.remove('open');
+            
+            // Toggle current dropdown
+            menu.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        function selectLanguage(type, language) {
+            if (type === 'source') {
+                currentSourceLanguage = language;
+                document.getElementById('sourceLanguageText').textContent = language;
+                document.getElementById('sourceTitle').textContent = `Source Code (${language})`;
+            } else {
+                currentTargetLanguage = language;
+                document.getElementById('targetLanguageText').textContent = language;
+                document.getElementById('targetTitle').textContent = `Converted Code (${language})`;
+            }
+            
+            // Close dropdown
+            const menu = document.getElementById(type + 'Menu');
+            const arrow = document.getElementById(type + 'Arrow');
+            menu.classList.remove('open');
+            arrow.classList.remove('open');
+            
+            // Update dropdown content
+            populateDropdown(type);
+        }
+
+        function filterLanguages(type, searchTerm) {
+            const itemsContainer = document.getElementById(type + 'Items');
+            const filteredLanguages = languages.filter(lang =>
+                lang.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            itemsContainer.innerHTML = '';
+            
+            if (filteredLanguages.length === 0) {
+                const div = document.createElement('div');
+                div.className = 'no-results';
+                div.textContent = 'No languages found';
+                itemsContainer.appendChild(div);
+            } else {
+                filteredLanguages.forEach(language => {
+                    const button = document.createElement('button');
+                    button.className = 'menu-item';
+                    button.textContent = language;
+                    button.onclick = () => selectLanguage(type, language);
+                    
+                    if ((type === 'source' && language === currentSourceLanguage) ||
+                        (type === 'target' && language === currentTargetLanguage)) {
+                        button.classList.add('selected');
+                    }
+                    
+                    itemsContainer.appendChild(button);
+                });
+            }
+        }
+
+        // Mock Claude API - Replace with real API integration
+        async function convertCode() {
+            const sourceCode = document.getElementById('sourceCode').value.trim();
+            
+            if (!sourceCode) {
+                showError('Please enter some code to convert');
+                return;
+            }
+            
+            hideError();
+            setLoading(true);
+            
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Mock conversion result
+                const convertedCode = `// Converted from ${currentSourceLanguage} to ${currentTargetLanguage}
+// This is a simulated conversion - integrate with Claude AI API for real results
+
+function fibonacci(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(10));`;
+                
+                document.getElementById('targetCode').value = convertedCode;
+                
+            } catch (error) {
+                showError('Failed to convert code. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function setLoading(loading) {
+            const button = document.getElementById('convertButton');
+            const buttonText = document.getElementById('convertButtonText');
+            const overlay = document.getElementById('loadingOverlay');
+            
+            if (loading) {
+                button.disabled = true;
+                buttonText.textContent = 'Converting...';
+                overlay.style.display = 'flex';
+            } else {
+                button.disabled = false;
+                buttonText.textContent = 'Convert Code';
+                overlay.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.getElementById('sourceMenu').classList.remove('open');
+                document.getElementById('targetMenu').classList.remove('open');
+                document.getElementById('sourceArrow').classList.remove('open');
+                document.getElementById('targetArrow').classList.remove('open');
+            }
+        });
+
+        // Initialize the app
+        initializeDropdowns();
+    </script>
+</body>
+</html>
