@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: codeverter
+  name: qr-generator
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: codeverter
+      app: qr-generator
   template:
     metadata:
       labels:
-        app: codeverter
+        app: qr-generator
     spec:
       containers:
-      - name: codeverter
-        image: rhxpchispi/codeverter:1.0
+      - name: qr-generator
+        image: rhxpchispi/qr-generator:1.0
         ports:
         - containerPort: 80
